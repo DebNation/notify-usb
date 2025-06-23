@@ -8,6 +8,7 @@ use std::{thread, time};
 const CONNECT_MP3: &[u8] = include_bytes!("../assets/connect.mp3");
 
 fn main() {
+    println!("Running notify-usb");
     let home = env::var("HOME").expect("HOME not set");
     let dir = format!("{}/.local/share/notify-usb", home);
     let _ = fs::create_dir_all(&dir).expect("failed to create directory");
