@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+difference = "2.0.0"
 rodio = "0.20.1"
 rust-embed = "8.7.2"
