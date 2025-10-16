@@ -1,53 +1,79 @@
-use rodio::Source;
 use std::env;
-use std::fs::{self, File};
-use std::io::{BufReader, ErrorKind};
-use std::process::Command;
-use std::{thread, time};
+use std::fs;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+use std::process::{Command, Stdio};
 
 const CONNECT_MP3: &[u8] = include_bytes!("../assets/connect.mp3");
+const DISCONNECT_MP3: &[u8] = include_bytes!("../assets/disconnect.mp3");
 
-fn main() {
-    println!("Running notify-usb");
+fn main() -> std::io::Result<()> {
+    let mut state = String::new();
+    // println!("Running notify-usb");
     let home = env::var("HOME").expect("HOME not set");
     let dir = format!("{}/.local/share/notify-usb", home);
-    let _ = fs::create_dir_all(&dir).expect("failed to create directory");
-    let audio_path = format!("{}/connect.mp3", dir);
-    std::fs::write(&audio_path, CONNECT_MP3).expect("Failed to write connect.mp3");
-    let file_path = format!("{}/usbstate.txt", &dir);
-
-    loop {
-        let out = Command::new("ls")
-            .arg("/dev")
-            .output()
-            .expect("ls command failed to start");
-        let str_out = str::from_utf8(&out.stdout).unwrap();
-        let contents = match fs::read_to_string(&file_path) {
-            Ok(contents) => contents,
-
-            Err(e) => {
-                if e.kind() == ErrorKind::NotFound {
-                    fs::write(&file_path, str_out).unwrap();
-                    str_out.to_string()
-                } else {
-                    eprintln!("Failed to read file: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        };
-        if str_out != contents {
-            fs::write(&file_path, str_out).unwrap();
-            play_audio(&audio_path);
-        }
-        let one_second = time::Duration::from_millis(1000);
-        thread::sleep(one_second);
+    let connect_path = format!("{}/connect.mp3", dir);
+    let disconnect_path = format!("{}/disconnect.mp3", dir);
+    if !Path::new(&dir).exists() {
+        fs::create_dir_all(&dir).expect("failed to create directory");
+        std::fs::write(&connect_path, CONNECT_MP3).expect("Failed to write connect.mp3");
+        std::fs::write(&disconnect_path, DISCONNECT_MP3).expect("Failed to write connect.mp3");
     }
+
+    let mut child = Command::new("udevadm")
+        .args(["monitor", "--udev", "--property"])
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to start udevadm");
+
+    // Read its stdout line by line
+    let stdout = child.stdout.take().expect("Failed to capture stdout");
+    let reader = BufReader::new(stdout);
+
+    let mut action: Option<String> = None;
+
+    for line in reader.lines() {
+        let line = line?;
+        if line.starts_with("ACTION=") {
+            let act = line.trim_start_matches("ACTION=").to_string();
+            action = match act.as_str() {
+                "add" => Some("connected".to_string()),
+
+                "remove" => Some("disconnected".to_string()),
+                _ => None,
+            };
+        } else if line.starts_with("ID_MODEL=") {
+            let model = line.trim_start_matches("ID_MODEL=").to_string();
+            if let Some(ref act) = action {
+                let new_state = format!("{}{}", model, act);
+                if state != new_state {
+                    notify(std::format!("Device: {} {}", model, act).trim());
+                    // println!("Device '{}' {}", model, act);
+                    if act == "connected" {
+                        play_audio(&connect_path);
+                    } else {
+                        play_audio(&disconnect_path);
+                    }
+                    state = new_state;
+                }
+                action = None;
+            }
+        }
+    }
+
+    Ok(())
+}
+fn play_audio(audio_path: &str) {
+    Command::new("mpv")
+        .arg("--ao=pulse")
+        .arg(audio_path)
+        .output()
+        .expect("mpv is not found");
 }
 
-fn play_audio(audio_path: &str) {
-    let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-    let audio = BufReader::new(File::open(audio_path).unwrap());
-    let source = rodio::Decoder::new(audio).unwrap();
-    let _ = stream_handle.play_raw(source.convert_samples());
-    std::thread::sleep(std::time::Duration::from_secs(2));
+fn notify(text: &str) {
+    Command::new("dunstify")
+        .arg(text)
+        .output()
+        .expect("dunst not found");
 }
