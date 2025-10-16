@@ -1,3 +1,4 @@
+use clap::Parser;
 use std::env;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -7,7 +8,15 @@ use std::process::{Command, Stdio};
 const CONNECT_MP3: &[u8] = include_bytes!("../assets/connect.mp3");
 const DISCONNECT_MP3: &[u8] = include_bytes!("../assets/disconnect.mp3");
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(long)]
+    no_audio: bool,
+}
+
 fn main() -> std::io::Result<()> {
+    let args = Args::parse();
     let mut state = String::new();
     // println!("Running notify-usb");
     let home = env::var("HOME").expect("HOME not set");
@@ -26,7 +35,6 @@ fn main() -> std::io::Result<()> {
         .spawn()
         .expect("Failed to start udevadm");
 
-    // Read its stdout line by line
     let stdout = child.stdout.take().expect("Failed to capture stdout");
     let reader = BufReader::new(stdout);
 
@@ -49,10 +57,12 @@ fn main() -> std::io::Result<()> {
                 if state != new_state {
                     notify(std::format!("Device: {} {}", model, act).trim());
                     // println!("Device '{}' {}", model, act);
-                    if act == "connected" {
-                        play_audio(&connect_path);
-                    } else {
-                        play_audio(&disconnect_path);
+                    if !args.no_audio {
+                        if act == "connected" {
+                            play_audio(&connect_path);
+                        } else {
+                            play_audio(&disconnect_path);
+                        }
                     }
                     state = new_state;
                 }

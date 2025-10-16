@@ -1,8 +1,8 @@
 [package]
 name = "notify-usb"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
-description = "Play sound when a USB device is attached or detached"
+description = "Notify when a USB device is attached or detached"
 repository = "https://github.com/DebNation/notify-usb"
 license = "GPL-3.0-or-later"
 keywords = [
@@ -18,3 +18,4 @@ categories = ["command-line-utilities"]
 maintainers = ["Debiprasad Das <debiprasaddas@proton.me>"]
 
 [dependencies]
+clap = { version = "4.5.49", features = ["derive"] }
