@@ -11,6 +11,7 @@ const DISCONNECT_MP3: &[u8] = include_bytes!("../assets/disconnect.mp3");
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+    /// Do not play audio when notifying
     #[arg(long)]
     no_audio: bool,
 }
