@@ -1,6 +1,6 @@
 [package]
 name = "notify-usb"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "Play sound when a USB device is attached or detached"
 repository = "https://github.com/DebNation/notify-usb"
