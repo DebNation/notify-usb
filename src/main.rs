@@ -13,7 +13,7 @@ const DISCONNECT_MP3: &[u8] = include_bytes!("../assets/disconnect.mp3");
 struct Args {
     /// Do not play audio when notifying
     #[arg(long)]
-    no_audio: bool,
+    no_sound: bool,
 }
 
 fn main() -> std::io::Result<()> {
@@ -58,7 +58,7 @@ fn main() -> std::io::Result<()> {
                 if state != new_state {
                     notify(std::format!("Device: {} {}", model, act).trim());
                     // println!("Device '{}' {}", model, act);
-                    if !args.no_audio {
+                    if !args.no_sound {
                         if act == "connected" {
                             play_audio(&connect_path);
                         } else {
@@ -83,8 +83,8 @@ fn play_audio(audio_path: &str) {
 }
 
 fn notify(text: &str) {
-    Command::new("dunstify")
+    Command::new("notify-send")
         .arg(text)
         .output()
-        .expect("dunst not found");
+        .expect("libnotify is not found");
 }
