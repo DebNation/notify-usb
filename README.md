@@ -19,7 +19,7 @@ exec-once = ~/.cargo/bin/notify-usb
 ```
 
 #### Customization :
-- use `--no-audio` flag if you want no audio
+- use `--no-sound` flag if you don't want to sound
 
 You can customize the sound(tone) that this programs plays, by replacing these files
 
