@@ -19,7 +19,6 @@ struct Args {
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     let mut state = String::new();
-    // println!("Running notify-usb");
     let home = env::var("HOME").expect("HOME not set");
     let dir = format!("{}/.local/share/notify-usb", home);
     let connect_path = format!("{}/connect.mp3", dir);
@@ -57,12 +56,11 @@ fn main() -> std::io::Result<()> {
                 let new_state = format!("{}{}", model, act);
                 if state != new_state {
                     notify(std::format!("Device: {} {}", model, act).trim());
-                    // println!("Device '{}' {}", model, act);
                     if !args.no_sound {
                         if act == "connected" {
-                            play_audio(&connect_path);
+                            play_audio(&connect_path)
                         } else {
-                            play_audio(&disconnect_path);
+                            play_audio(&disconnect_path)
                         }
                     }
                     state = new_state;
@@ -75,11 +73,14 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 fn play_audio(audio_path: &str) {
-    Command::new("mpv")
+    if let Err(err) = Command::new("mpv")
         .arg("--ao=pulse")
         .arg(audio_path)
         .output()
-        .expect("mpv is not found");
+    {
+        eprintln!("Failed to play audio: {err}");
+        eprintln!("💡 Tip: Make sure `mpv` is installed and in your PATH.");
+    }
 }
 
 fn notify(text: &str) {
