@@ -84,8 +84,8 @@ fn play_audio(audio_path: &str) {
 }
 
 fn notify(text: &str) {
-    Command::new("notify-send")
+    Command::new("dunstify")
         .arg(text)
         .output()
-        .expect("libnotify is not found");
+        .expect("dunst is not found");
 }

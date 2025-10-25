@@ -1,6 +1,6 @@
 [package]
 name = "notify-usb"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2024"
 description = "Notify when a USB device is attached or detached"
 repository = "https://github.com/DebNation/notify-usb"

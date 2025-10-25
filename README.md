@@ -3,7 +3,7 @@
 I have seen gnome/kde/cinnamon desktop to show notification and play a sound tone on USB device attach or detach event, but that is not present if you are using a Window Manager, so it is made for Window Manager/Compositor users who wants a notification with sound cue for USB connections.
 
 ### Requirements :
-- `libnotify` (in most systems it is already present)
+- `dunst`
 - `mpv` (optional if you want sound cue)
 
 ### Installation :
